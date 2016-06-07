@@ -80,6 +80,13 @@ def test_doi_minting(db, doi_in, doi_out):
     assert pid.status == PIDStatus.RESERVED
 
 
+def test_doi_minting_datacite(db, deposit, app):
+    """Test the complete DOI minting with DataCite."""
+    # Enable the listener
+    app.config['DEPOSIT_DATACITE_MINTING_ENABLED'] = True
+    deposit = deposit.publish()
+
+
 @pytest.mark.parametrize('doi', [
     '1234/foo',
     'a',
