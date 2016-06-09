@@ -33,6 +33,8 @@ from flask import url_for
 from helpers import login_user_via_session
 from invenio_search import current_search
 from six import BytesIO
+from mock import patch
+from invenio_pidstore.providers.datacite import DataCiteProvider
 
 
 def get_json(response, code=None):
@@ -48,9 +50,24 @@ def make_file_fixture(filename, text=None):
     return (BytesIO(content), filename)
 
 
-def test_simple_rest_flow(api, api_client, db, es, location, users,
+class MockDataCiteProvider(DataCiteProvider):
+    """Mock DataCite provider."""
+    last_url = None
+    last_doc = None
+
+    def register(self, url, doc):
+        """Instead of registering with DataCite, save most recent kwargs."""
+        self.__class__.last_url = url
+        self.__class__.last_doc = doc
+
+
+@patch('zenodo.modules.deposit.tasks.DataCiteProvider',
+       MockDataCiteProvider)
+def test_simple_rest_flow(app, api, api_client, db, es, location, users,
                           write_token):
     """Test simple flow using REST API."""
+    # Setting var this way doesn't work
+    # app.config['DEPOSIT_DATACITE_MINTING_ENABLED'] = True
     client = api_client
     test_data = dict(
         metadata=dict(
@@ -111,6 +128,13 @@ def test_simple_rest_flow(api, api_client, db, es, location, users,
     # Publish deposition
     response = client.post(links['publish'], headers=auth_headers)
     record_id = get_json(response, code=202)['record_id']
+
+    # Check if the datacite DOI has been minted
+    MockDataCiteProvider.last_url
+    assert MockDataCiteProvider.last_url == 'https://zenodo.org/record/1'
+    # Note: only fetch one field from serialized datacite metadata
+    assert MockDataCiteProvider.last_doc['identifier']['identifier'] == \
+        '10.5072/zenodo.1'
 
     # Check that same id is being used for both deposit and record.
     assert deposit_id == record_id

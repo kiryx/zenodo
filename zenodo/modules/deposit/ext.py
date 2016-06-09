@@ -29,6 +29,8 @@ from __future__ import absolute_import, print_function
 from invenio_indexer.signals import before_record_index
 
 from .indexer import indexer_receiver
+from .receivers import mint_doi_after_publish
+from invenio_deposit.signals import post_action
 
 
 class ZenodoDeposit(object):
@@ -38,8 +40,13 @@ class ZenodoDeposit(object):
         """Extension initialization."""
         if app:
             self.init_app(app)
+        self.register_signals()
 
     def init_app(self, app):
         """Flask application initialization."""
         before_record_index.connect(indexer_receiver, sender=app)
         app.extensions['zenodo-deposit'] = self
+
+    def register_signals(self):
+        """Register Zenodo Deposit signals."""
+        post_action.connect(mint_doi_after_publish)

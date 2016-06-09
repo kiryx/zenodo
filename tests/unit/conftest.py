@@ -88,7 +88,9 @@ def config():
     return dict(
         CFG_SITE_NAME="testserver",
         DEBUG_TB_ENABLED=False,
+        CELERY_ALWAYS_EAGER=True,
         LOGIN_DISABLED=False,
+        DEPOSIT_DATACITE_MINTING_ENABLED=True,
         OAUTHLIB_INSECURE_TRANSPORT=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'),
