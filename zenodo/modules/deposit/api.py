@@ -29,7 +29,6 @@ from __future__ import absolute_import
 from os.path import splitext
 
 from flask import current_app
-
 from invenio_communities.models import Community, InclusionRequest
 from invenio_deposit.api import Deposit as _Deposit
 from invenio_deposit.api import preserve
@@ -41,6 +40,8 @@ from zenodo.modules.records.minters import is_local_doi, zenodo_doi_updater
 from zenodo.modules.sipstore.api import ZenodoSIP
 
 from .errors import MissingFilesError, MissingCommunityError
+from .fetchers import zenodo_deposit_fetcher
+from .minters import zenodo_deposit_minter
 
 PRESERVE_FIELDS = (
     '_deposit',
@@ -71,6 +72,10 @@ class ZenodoDeposit(_Deposit):
     """Define API for changing deposit state."""
 
     file_cls = ZenodoFileObject
+
+    deposit_fetcher = staticmethod(zenodo_deposit_fetcher)
+
+    deposit_minter = staticmethod(zenodo_deposit_minter)
 
     def is_published(self):
         """Check if deposit is published."""
@@ -267,14 +272,15 @@ class ZenodoDeposit(_Deposit):
             if missing:
                 raise MissingCommunityError(missing)
 
-    def publish(self, pid=None, id_=None):
+    def publish(self, pid=None, id_=None, user_id=None, sip_agent=None):
         """Publish the Zenodo deposit."""
         self['owners'] = self['_deposit']['owners']
         self.validate_publish()
         is_first_publishing = not self.is_published()
         deposit = super(ZenodoDeposit, self).publish(pid, id_)
         pid, record = deposit.fetch_published()
-        ZenodoSIP.create(pid, record, create_sip_files=is_first_publishing)
+        ZenodoSIP.create(pid, record, create_sip_files=is_first_publishing,
+                         user_id=user_id, agent=sip_agent)
         return deposit
 
     @preserve(result=False, fields=PRESERVE_FIELDS)

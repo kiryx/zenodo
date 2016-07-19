@@ -244,6 +244,8 @@ DEPOSIT_REST_ENDPOINTS = dict(
 # ========
 #: Default JSON schema for the SIP agent
 SIPSTORE_DEFAULT_AGENT_JSONSCHEMA = 'sipstore/agent-webclient-v1.0.0.json'
+#: GitHub SIP Agent
+SIPSTORE_GITHUB_AGENT_JSONSCHEMA = 'sipstore/agent-githubclient-v1.0.0.json'
 
 #: Enable the agent JSON schema
 SIPSTORE_AGENT_JSONSCHEMA_ENABLED = True
@@ -270,13 +272,44 @@ FRONTPAGE_ENDPOINT = "zenodo_frontpage.index"
 #: Overwrite default Sentry extension class to support Sentry 6.
 LOGGING_SENTRY_CLASS = 'invenio_logging.sentry6:Sentry6'
 
+# Invenio-Github Config
+#: Set handlers
 GITHUB_REMOTE_APP.update(dict(
     description='Software collaboration platform, with one-click '
                 'software preservation in Zenodo.',
+    disconnect_handler='invenio_github.handlers:disconnect',
+    signup_handler=dict(
+        info='invenio_oauthclient.contrib.github:account_info',
+        setup='invenio_github.handlers:account_setup',
+        view='invenio_oauthclient.handlers:signup_handler',
+    ),
 ))
+#: Set GitHub scopes
+GITHUB_REMOTE_APP['params']['request_token_params']['scope'] = \
+    'user,admin:repo_hook,read:org'
+#: Set if webhooks check SSL certificate
+# CHANGEME: Should be `True` in production
+GITHUB_INSECURE_SSL = False
+#: GitHub webhook url override
+GITHUB_WEBHOOK_RECEIVER_URL = \
+    'https://{server}/api/receivers/github/events/?access_token={token}'
+#: GitHub shared secret
+GITHUB_SHARED_SECRET = 'CHANGEME'
+
+#: Set Zenodo deposit class
+GITHUB_RELEASE_CLASS = 'zenodo.modules.github.api:ZenodoGitHubRelease'
+#: Set Zenodo deposit class
+GITHUB_DEPOSIT_CLASS = 'zenodo.modules.deposit.api:ZenodoDeposit'
+#: Set Zenodo deposit preprocessor
+GITHUB_DEPOSIT_PREPROCESSOR = \
+    'zenodo.modules.deposit.api.ZenodoDeposit:github_preprocess'
+#: GitHub metdata file
+GITHUB_METADATA_FILE = '.zenodo.json'
+
 
 #: Defintion of OAuth client applications.
 OAUTHCLIENT_REMOTE_APPS = dict(
+    # FIXME: Remove this commented config from here...
     # github=dict(
     #     title='GitHub',
     #     description='Software collaboration platform, with one-click '
@@ -428,13 +461,13 @@ RECORDS_UI_ENDPOINTS = dict(
     ),
     recid_preview=dict(
         pid_type='recid',
-        route='/record/<pid_value>/preview/<filename>',
+        route='/record/<pid_value>/preview/<path:filename>',
         view_imp='invenio_previewer.views.preview',
         record_class='invenio_records_files.api:Record',
     ),
     recid_files=dict(
         pid_type='recid',
-        route='/record/<pid_value>/files/<filename>',
+        route='/record/<pid_value>/files/<path:filename>',
         view_imp='invenio_files_rest.views.file_download_ui',
         record_class='invenio_records_files.api:Record',
     ),
