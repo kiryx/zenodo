@@ -25,4 +25,4 @@
 # Requirements for testing development version of important packages.
 -e git+https://github.com/inveniosoftware/invenio-files-rest.git#egg=invenio-files-rest
 -e git+https://github.com/zenodo/zenodo-migrationkit.git#egg=zenodo-migrationkit
--e git+https://github.com/inveniosoftware/invenio-github.git#egg=invenio-github
+-e git+https://github.com/slint/invenio-github.git@ui_migration#egg=invenio-github
