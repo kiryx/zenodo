@@ -35,6 +35,8 @@ from werkzeug.routing import BuildError
 from . import common
 from ...models import AccessRight, ObjectType
 
+from invenio_pidrelations.serializers.schemas import RelationsSchema
+
 
 class StrictKeysSchema(Schema):
     """Ensure only valid keys exists."""
@@ -236,7 +238,7 @@ class MetadataSchemaV1(common.CommonMetadataSchemaV1):
         return missing
 
 
-class RecordSchemaV1(common.CommonRecordSchemaV1):
+class RecordSchemaV1(common.CommonRecordSchemaV1, RelationsSchema):
     """Schema for records v1 in JSON."""
 
     # files = fields.Nested(
