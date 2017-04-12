@@ -206,8 +206,11 @@ class ZenodoDeposit(Deposit):
         comms = copy(current_app.config['ZENODO_COMMUNITIES_AUTO_REQUEST'])
         pid = PersistentIdentifier.get('recid', record['recid'])
         pv = PIDVersioning(child=pid)
-        rec_grants = [ZenodoRecord.get_record(
-            p.get_assigned_object()).get('grants') for p in pv.children]
+        if pv.exists:
+            rec_grants = [ZenodoRecord.get_record(
+                p.get_assigned_object()).get('grants') for p in pv.children]
+        else:
+            rec_grants = []
         if self.get('grants') or any(rec_grants):
             comms.extend(
                 current_app.config['ZENODO_COMMUNITIES_REQUEST_IF_GRANTS'])
@@ -220,8 +223,11 @@ class ZenodoDeposit(Deposit):
         comms = []
         pid = PersistentIdentifier.get('recid', record['recid'])
         pv = PIDVersioning(child=pid)
-        rec_grants = [ZenodoRecord.get_record(
-            p.get_assigned_object()).get('grants') for p in pv.children]
+        if pv.exists:
+            rec_grants = [ZenodoRecord.get_record(
+                p.get_assigned_object()).get('grants') for p in pv.children]
+        else:
+            rec_grants = []
         if self.get('grants') or any(rec_grants):
             comms = copy(current_app.config[
                 'ZENODO_COMMUNITIES_ADD_IF_GRANTS'])
@@ -290,31 +296,32 @@ class ZenodoDeposit(Deposit):
         # Update Communities and OAISet information for all record versions
         recid = PersistentIdentifier.get('recid', record['recid'])
         pv = PIDVersioning(child=recid)
-        for pid in pv.children:
-            if pid != recid:
-                rec = ZenodoRecord.get_record(pid.get_assigned_object())
-                rec['communities'] = sorted(new_rec_comms)
-                if current_app.config['COMMUNITIES_OAI_ENABLED']:
-                    rec = self._sync_oaisets_with_communities(rec)
-                if not rec['communities']:
-                    del rec['communities']
-                rec.commit()
-                depid = PersistentIdentifier.get(
-                    'depid', rec['_deposit']['id'])
-                deposit = ZenodoDeposit.get_record(depid.get_assigned_object())
-                deposit['communities'] = sorted(new_dep_comms)
-                if not deposit['communities']:
-                    del deposit['communities']
-                deposit.commit()
+        if pv.exists:
+            for pid in pv.children:
+                if pid != recid:
+                    rec = ZenodoRecord.get_record(pid.get_assigned_object())
+                    rec['communities'] = sorted(new_rec_comms)
+                    if current_app.config['COMMUNITIES_OAI_ENABLED']:
+                        rec = self._sync_oaisets_with_communities(rec)
+                    if not rec['communities']:
+                        del rec['communities']
+                    rec.commit()
+                    depid = PersistentIdentifier.get(
+                        'depid', rec['_deposit']['id'])
+                    deposit = ZenodoDeposit.get_record(depid.get_assigned_object())
+                    deposit['communities'] = sorted(new_dep_comms)
+                    if not deposit['communities']:
+                        del deposit['communities']
+                    deposit.commit()
 
-        # Update new version deposit
-        if pv.draft_child_deposit:
-            draft_dep = ZenodoDeposit.get_record(
-                pv.draft_child_deposit.get_assigned_object())
-            if draft_dep.id != self.id:
-                draft_dep['communities'] = sorted(new_dep_comms)
-                if not draft_dep['communities']:
-                    del draft_dep['communities']
+            # Update new version deposit
+            if pv.draft_child_deposit:
+                draft_dep = ZenodoDeposit.get_record(
+                    pv.draft_child_deposit.get_assigned_object())
+                if draft_dep.id != self.id:
+                    draft_dep['communities'] = sorted(new_dep_comms)
+                    if not draft_dep['communities']:
+                        del draft_dep['communities']
                 draft_dep.commit()
 
         record['communities'] = sorted(new_rec_comms)
@@ -341,7 +348,7 @@ class ZenodoDeposit(Deposit):
         record = super(ZenodoDeposit, self)._publish_new(id_=id_)
         recid = PersistentIdentifier.get('recid', record['recid'])
         pv = PIDVersioning(child=recid)
-        if pv.children.count() > 1:
+        if pv.exists and pv.children.count() > 1:
             prev_recid = pv.children.all()[-2]
             rec_comms = set(ZenodoRecord.get_record(
                 prev_recid.get_assigned_object()).get('communities', []))

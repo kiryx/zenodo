@@ -72,14 +72,12 @@ def zenodo_record_minter(record_uuid, data):
     zenodo_doi_minter(record_uuid, data)
     oaiid_minter(record_uuid, data)
 
-    zenodo_concept_doi_minter(record_uuid, data)
-
-    # Update redirect and remove the record draft link
     if 'conceptrecid' in data:
+        zenodo_concept_doi_minter(record_uuid, data)
         conceptrecid = PersistentIdentifier.get('recid', data['conceptrecid'])
         PIDVersioning(parent=conceptrecid).update_redirect()
-    depid = data.pid
-    RecordDraft.unlink(recid, depid)
+        depid = data.pid
+        RecordDraft.unlink(recid, depid)
 
     return recid
 
@@ -93,7 +91,6 @@ def zenodo_concept_doi_minter(record_uuid, data):
         versioning applied.
     """
     doi = data.get('doi')
-    assert 'conceptrecid' in data
 
     # Only mint Concept DOI for Zenodo DOIs
     if is_local_doi(doi):
