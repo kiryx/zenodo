@@ -76,15 +76,47 @@ Zenodo has three active branches:
 * ``qa`` - Quality assurance branch (https://github.com/zenodo/zenodo/tree/qa).
 * ``production`` - Production branch (https://github.com/zenodo/zenodo/tree/production).
 
+Versioning
+~~~~~~~~~~
+Code versioning uses the semantic versioning scheme ``X.Y.Z``, where:
+
+* ``X`` increments for major changes to the system's data or external
+    behaviour, which include:
+  * DB model changes, which require data migration.
+  * Record Data model changes (JSON Schema), which require data migration.
+  * REST API changes, which ARE NOT backwards compatible.
+    This usually implies also upgrading the REST API endpoint version.
+* ``Y`` increments for major new features and API changes, which include:
+  * Programmatic API changes.
+  * REST API changes, which are backwards-compatible.
+  * Backwards-compatible changes to the DB model or Record data
+    model (JSON Schema), which do not require data migration.
+  * Elasticsearch mapping changes, which require reindexing of records.
+* ``Z`` increments for all lesser changes to the code base, which do not fall
+  into categories above.
+
 Tags
 ~~~~
-Zenodo only uses tags to mark major changes in the code base. In particular releases are not tagged since they are managed through branches. Currently the following tags exists:
+Zenodo uses tags for marking the code releases (see Versioning above),
+as well as marking deployment times of two instances of Zenodo hosted by CERN:
 
+* the QA system (https://sandbox.zenodo.org)
+* the production system (https://sandbox.zenodo.org)
+
+Apart from that there are three "legacy" tags, which mark major changes
+in the codebase in the past:
+
+* ``pre-versioning-20170524`` -- Zenodo prior to being migrated with a
+  "PID Versioning" feature (24 May 2017).
 * ``legacy-20140305`` -- Zenodo prior to being rebased to Invenio's new module
   system (5 March 2014).
 * ``legacy-20130508`` -- The OpenAIRE Orphan Record Repository prior to getting
   a make-over and being transformed into Zenodo (8 March 2013, which is also
   the Zenodo launch date).
+
+
+The tags labels for code versioning are the same as the version (``X.Y.Z``),
+prepended with ``v``, i.e.: ``vX.Y.Z``, e.g.: ``v3.4.1``.
 
 
 Testing
