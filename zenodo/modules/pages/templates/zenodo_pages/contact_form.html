@@ -113,26 +113,43 @@
               </div>
             </div>
             <div class="row">
-              <div class="col-md-2"></div>
-              <div class="col-md-10">
-                {{ render_user_agent(form.include_os_browser, uap) }}
+              <div class="col-md-2">
+                <label> Browser and system information</label>
+              </div>
+              <div class="col-md-8">
+                <div class="row">
+                      <div id="information">
+                        {%- if uap.os %}
+                        <div class="col-md-3"><b>Operating system</b></div>
+                        <div class="col-md-9">{{ uap.os }}</div>
+                        {%- endif %}
+
+                        {%- if uap.browser %}
+                        <div class="col-md-3"><b>Browser</b></div>
+                        <div class="col-md-9">{{ uap.browser }}</div>
+                        {%- endif %}
+
+                        {%- if uap.device and uap.device != 'Other' %}
+                        <div class="col-md-3"><b>Device</b></div>
+                        <div class="col-md-9">{{ uap.device }}</div>
+                        {%- endif %}
+                      </div>
+                </div>
+              </div>
+              <div class="col-md-2">
+                <label for="{{form.include_os_browser.label.field_id}}">Send with message</label>
+                <input class="form-control" id="{{ form.include_os_browser.id }}}" name="{{ form.include_os_browser.name }}" type="checkbox" value="y" checked>
               </div>
             </div>
             <div class="row">
-              <div class="col-md-2"></div>
-              <div class="col-md-10">
+              <div class="col-md-6">
                 {{ render_form_field(form.recaptcha) }}
               </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-4"></div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <button id="form_button" class="btn btn-block btn-success" type="submit">
                   Send Request
                 </button>
               </div>
-              <div class="col-md-4"></div>
             </div>
           </form>
         </div>

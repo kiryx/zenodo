@@ -22,34 +22,6 @@
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 -#}
 
-{%- macro render_user_agent(field, uap) -%}
-<div class="row">
-  <div class="col-md-12">
-    <div class="col-md-10">
-      <input id="{{ field.id }}}" name="{{ field.name }}" type="checkbox" value="y" checked>
-      Send browser and system information.
-      <div id="information">
-        {%- if uap.os %}
-        <div class="col-md-3"><b>Operating system</b></div>
-        <div class="col-md-9">{{ uap.os }}</div>
-        {%- endif %}
-
-        {%- if uap.browser %}
-        <div class="col-md-3"><b>Browser</b></div>
-        <div class="col-md-9">{{ uap.browser }}</div>
-        {%- endif %}
-
-        {%- if uap.device and uap.device != 'Other' %}
-        <div class="col-md-3"><b>Device</b></div>
-        <div class="col-md-9">{{ uap.device }}</div>
-        {%- endif %}
-      </div>
-    </div>
-  </div>
-</div>
-{%- endmacro %}
-
-
 {%- macro render_form_field(field) %}
 {{field(class_="form-control")}}
 {%- if field.description %}
