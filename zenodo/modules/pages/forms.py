@@ -81,7 +81,7 @@ class ContactForm(FlaskForm):
     )
 
     issue_category = SelectField(
-        _('Category for Issue'),
+        _('Category'),
         description=_('Required.'),
         coerce=str,
         validators=[DataRequired()],

@@ -32,6 +32,7 @@ from flask_babelex import lazy_gettext as _
 from flask_security import current_user
 from jinja2.filters import do_filesizeformat
 from wtforms.validators import Length
+from collections import OrderedDict
 
 from .forms import ContactForm
 from .utils import check_attachment_size, send_support_email, \
@@ -41,7 +42,6 @@ blueprint = Blueprint(
     'zenodo_pages',
     __name__,
     template_folder='templates',
-    static_folder='static',
 )
 
 
@@ -54,17 +54,17 @@ def support():
     form = ContactForm()
     uap = user_agent_information()
 
-    # If user is logged in add email to it's form.
     if current_user.is_authenticated:
+        user_id = current_user.id
         form.email.data = current_user.email
+    else:
+        user_id = None
 
-    # Generation of message based upon maximum attachment size.
-    content = dict((row[0], (row[2], index)) for index, row in
-                   enumerate(current_app.config['PAGES_ISSUE_CATEGORY']))
-
-    # Information added to form from config file.
-    form.issue_category.choices = [(row[0], row[1]) for row in
-                                   current_app.config['PAGES_ISSUE_CATEGORY']]
+    # Load form choices and validation from config
+    categories = OrderedDict(
+        (c['key'], c) for c in current_app.config['PAGES_ISSUE_CATEGORIES'])
+    form.issue_category.choices = \
+        [(c['key'], c['title']) for c in categories.values()]
     form.description.validators.append(Length(
         min=current_app.config['PAGES_DESCRIPTION_MIN_LENGTH'],
         max=current_app.config['PAGES_DESCRIPTION_MAX_LENGTH'],
@@ -72,7 +72,6 @@ def support():
     form.attachments.description = 'Optional. Max attachments size: ' + \
         do_filesizeformat(current_app.config['PAGES_ATTACHMENT_MAX_SIZE'])
 
-    # If form is validated send email to the admin.
     if form.validate_on_submit():
         attachments = request.files.getlist("attachments")
         if attachments and not check_attachment_size(attachments):
@@ -80,31 +79,21 @@ def support():
                                            'Please add URLs to the files '
                                            'or make a smaller selection.')
         else:
-            if current_user.is_authenticated:
-                user_id = current_user.id
-            else:
-                user_id = None
-            # Dictionary storing data to be sent.
-            context = dict(
-                uap=uap,
-                info=form.data,
-                user_id=user_id,
-            )
-
-            send_support_email(context)
+            context = dict(user_id=user_id, info=form.data, uap=uap)
+            recipients = c[form.issue_category.data]['recipients']
+            send_support_email(context, recipients)
             flash(
                 _('Request sent successfully, '
-                  'You should receive a confirmation email within 20 minutes -'
-                  ' if this does not happen you should retry or send us an '
-                  'email directly to team@zenodo.org.'),
+                  'You should receive a confirmation email within 20 minutes '
+                  '- if this does not happen you should retry or send us an '
+                  'email directly to info@zenodo.org.'),
                 category='success'
             )
             return redirect(url_for('zenodo_frontpage.index'))
-
     return render_template(
         'zenodo_pages/contact_form.html',
         uap=uap,
         form=form,
-        content=content,
+        categories=categories,
         max_file_size=current_app.config['PAGES_ATTACHMENT_MAX_SIZE'],
     )

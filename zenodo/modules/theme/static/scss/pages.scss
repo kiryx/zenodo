@@ -59,21 +59,9 @@
   }
 }
 
-#contact_page {
+#contact-page {
 
-  #information {
-    margin-top: 5px;
-  }
-
-  .login-email {
-    margin-top: -20px;
-  }
-
-  .header-form {
-    margin: 0;
-  }
-
-  textarea#description {
+  textarea[name="description"] {
     height: 110px;
   }
 
@@ -81,15 +69,4 @@
     margin-bottom: 10px;
   }
 
-  .contact {
-    margin-right: 3%;
-    margin-left: 1%;
-
-    .row {
-      div {
-        padding-left: 0;
-        padding-right: 0;
-      }
-    }
-  }
 }

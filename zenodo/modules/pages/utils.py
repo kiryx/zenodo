@@ -97,7 +97,7 @@ def check_attachment_size(attachments):
     return True
 
 
-def send_support_email(context):
+def send_support_email(context, recipients=None):
     """Signal for sending emails after contact form validated.
 
     :param context: Dictionary with email information.
@@ -108,7 +108,7 @@ def send_support_email(context):
     msg = Message(
         msg_title,
         sender=current_app.config['PAGES_SENDER_EMAIL'],
-        recipients=current_app.config['PAGES_SUPPORT_EMAIL'],
+        recipients=recipients or current_app.config['PAGES_SUPPORT_EMAIL'],
         reply_to=context.get('info').get('email'),
         body=msg_body
     )
